@@ -4,9 +4,20 @@ import sys
 from termcolor import colored
 import thread
 from threading import Thread
+import math
 
 '''This file opens a socketed server thread and parses incomming messages to send unique
 data packets to multiple clients'''
+
+class Waypoint():
+    def __init__(self, x, y, z, roll, pitch, yaw):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
+
 
 class Server:
     def __init__(self,port,host):
@@ -14,16 +25,11 @@ class Server:
         self.host = host
         self.server = None
         self.ON = True
-        self.waypoints = [1,2,3,4,5]
-        self.curWP = self.waypoints[0]
+        self.waypoints = [Waypoint(1.,1.,1.,0,0,0),Waypoint(2.,2.,2.,0,0,0),Waypoint(3.,3.,3.,0,0,0)]
+        #self.waypoints = [1,2,3,4,5]
+        self.curPose = Waypoint(100,100,100,0,0,0) #starting this off big before vicon starts
         self.curWPindex = 0
-
-        self.x = 0
-        self.y = 0
-        self.z = 0
-        self.roll = 0
-        self.pitch = 0
-        self.yaw = 0
+        self.r = 0.1 # m
 
     def newClient(self,clientsocket, addr):
         #This listens for the incomming messages that client_rate.py is listening to ROS for
@@ -33,23 +39,26 @@ class Server:
             pose = msg.split(',')
             clientsocket.send("ACK!")
 
-            self.x = float(pose[0])
-            self.y = float(pose[1])
-            self.z = float(pose[2])
-            self.roll = float(pose[3])
-            self.pitch = float(pose[4])
-            self.yaw = float(pose[5])
+            self.curPose.x = float(pose[0])
+            self.curPose.y = float(pose[1])
+            self.curPose.z = float(pose[2])
+            self.curPose.roll  = float(pose[3])
+            self.curPose.pitch = float(pose[4])
+            self.curPose.yaw   = float(pose[5])
 
         clientsocket.close()
 
     def checkWP(self):
         #This is a 1D exaple for checking if the drone has made it to a current waypoint
         while True:
-            if self.x == self.curWP:
+            if math.pow((self.curPose.x - self.waypoints[self.curWPindex].x),2) + math.pow((self.curPose.y - self.waypoints[self.curWPindex].y),2) + math.pow((self.curPose.z - self.waypoints[self.curWPindex].z),2) <= math.pow(self.r,2): #Check if WP is in range of sphere
                 print colored("MADE IT TO WP!", "green")
                 #send new drone control command
                 self.curWPindex +=1
-                self.curWP = self.waypoints[self.curWPindex]
+
+                #check if end of trajectory
+                if self.curWPindex == len(self.waypoints):
+                    break
 
 
     def connect(self):
@@ -84,6 +93,6 @@ class Server:
         print "Server closed."
 
 '''Main loop for testing'''
-s = Server(50001,"127.0.0.1")
+s = Server(50004,"127.0.0.1")
 s.connect()
 s.listen()

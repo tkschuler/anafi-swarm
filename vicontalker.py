@@ -13,8 +13,8 @@ def talker():
     while not rospy.is_shutdown():
         data = TwistStamped()
         data.twist.linear.x = i
-        data.twist.linear.y = random()
-        data.twist.linear.z = random()
+        data.twist.linear.y = i
+        data.twist.linear.z = i
         rospy.loginfo(data)
         pub.publish(data)
         rate.sleep()

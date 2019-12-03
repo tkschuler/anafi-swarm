@@ -9,7 +9,7 @@ from termcolor import colored
 TCP_IP = '127.0.0.1'
 #TCP_IP = 'aerohab.eduroam.gmu.edu'
 
-TCP_PORT = 50001
+TCP_PORT = 50003
 BUFFER_SIZE = 1024
 MESSAGE = "s"
 
